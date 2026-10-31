@@ -1,38 +1,13 @@
-name: Build Android APK
+import 'package:flutter_test/flutter_test.dart';
+import 'package:plot_division_pro/main.dart';
 
-on:
-  push:
-    branches: [ main, master ]
-  workflow_dispatch:
+void main() {
+  testWidgets('Plot Division App smoke test', (WidgetTester tester) async {
+    // Build our app and trigger a frame.
+    await tester.pumpWidget(const PlotDivisionApp());
 
-jobs:
-  build:
-    runs-on: ubuntu-latest
-
-    steps:
-    - name: Checkout Repository
-      uses: actions/checkout@v3
-
-    - name: Set up Java JDK
-      uses: actions/setup-java@v3
-      with:
-        distribution: 'zulu'
-        java-version: '17'
-
-    - name: Set up Flutter
-      uses: subosito/flutter-action@v2
-      with:
-        flutter-version: '3.19.x'
-        channel: 'stable'
-
-    - name: Get Dependencies
-      run: flutter pub get
-
-    - name: Build Release APK
-      run: flutter build apk --release
-
-    - name: Upload Release APK Artifact
-      uses: actions/upload-artifact@v3
-      with:
-        name: PlotDivisionPro-Release-APK
-        path: build/app/outputs/flutter-apk/app-release.apk
+    // Verify that the title appears on screen
+    expect(find.text('Area Calculator'), findsOneWidget);
+    expect(find.text('Developed by Sahil Janwery'), findsOneWidget);
+  });
+}
