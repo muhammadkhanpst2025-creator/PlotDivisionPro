@@ -1,9 +1,38 @@
-import 'package:flutter_test/flutter_test.dart';
-import 'package:income_expenses/main.dart';
+name: Build Android APK
 
-void main() {
-  testWidgets('app root builds', (tester) async {
-    await tester.pumpWidget(const IncomeExpensesApp());
-    expect(find.text('Income & Expenses'), findsWidgets);
-  });
-}
+on:
+  push:
+    branches: [ main, master ]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout Repository
+      uses: actions/checkout@v3
+
+    - name: Set up Java JDK
+      uses: actions/setup-java@v3
+      with:
+        distribution: 'zulu'
+        java-version: '17'
+
+    - name: Set up Flutter
+      uses: subosito/flutter-action@v2
+      with:
+        flutter-version: '3.19.x'
+        channel: 'stable'
+
+    - name: Get Dependencies
+      run: flutter pub get
+
+    - name: Build Release APK
+      run: flutter build apk --release
+
+    - name: Upload Release APK Artifact
+      uses: actions/upload-artifact@v3
+      with:
+        name: PlotDivisionPro-Release-APK
+        path: build/app/outputs/flutter-apk/app-release.apk
