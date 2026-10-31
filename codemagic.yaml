@@ -5,9 +5,10 @@ workflows:
     instance_type: mac_mini_m1
     environment:
       flutter: stable
-      groups:
-        - keySTORE_credentials
     scripts:
+      - name: Generate Missing Platform Folders
+        script: |
+          flutter create . --org org.sahiljanwery --project-name plot_division_pro
       - name: Get Flutter packages
         script: |
           flutter packages pub get
