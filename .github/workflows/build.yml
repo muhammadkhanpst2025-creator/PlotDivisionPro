@@ -25,6 +25,9 @@ jobs:
         flutter-version: '3.19.x'
         channel: 'stable'
 
+    - name: Generate Missing Platform Folders
+      run: flutter create . --org org.sahiljanwery --project-name plot_division_pro
+
     - name: Get Dependencies
       run: flutter pub get
 
