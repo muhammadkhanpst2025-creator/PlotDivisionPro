@@ -6,11 +6,13 @@ void main() {
   runApp(const PlotDivisionApp());
 }
 
+
 class SavedDataStore {
   static List<SavedMeasurementModel> items = [];
 
   static String exportToJson() {
-    List> rawList = [];
+    List<Map<String, dynamic>> rawList = [];
+
     for (var item in items) {
       rawList.add({
         'id': item.id,
@@ -29,6 +31,7 @@ class SavedDataStore {
         'totalArea': item.totalArea,
       });
     }
+
     return jsonEncode(rawList);
   }
 
@@ -36,6 +39,7 @@ class SavedDataStore {
     try {
       List<dynamic> jsonList = jsonDecode(jsonString);
       items.clear();
+
       for (var map in jsonList) {
         items.add(SavedMeasurementModel(
           id: map['id'] ?? DateTime.now().toString(),
@@ -51,7 +55,7 @@ class SavedDataStore {
           diagAC: map['diagAC'] ?? '',
           diagAD: map['diagAD'] ?? '',
           direction: map['direction'] ?? 'Vertical',
-          totalArea: map['totalArea'] ?? 0.0,
+          totalArea: (map['totalArea'] ?? 0.0).toDouble(),
         ));
       }
     } catch (e) {
