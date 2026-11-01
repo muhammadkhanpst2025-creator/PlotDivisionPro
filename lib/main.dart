@@ -10,9 +10,10 @@ class SavedDataStore {
   static List<SavedMeasurementModel> items = [];
 
   static String exportToJson() {
-    List<Map<String, dynamic>> jsonList = items.map((item) => {
+    List> jsonList = items.map((item) => {
       'id': item.id,
       'name': item.name,
+      'dateTime': item.dateTime,
       'shape': item.shape,
       'unit': item.unit,
       'sideA': item.sideA,
@@ -22,7 +23,7 @@ class SavedDataStore {
       'sideE': item.sideE,
       'diagAC': item.diagAC,
       'diagAD': item.diagAD,
-      'percentages': item.percentages,
+      'direction': item.direction,
       'totalArea': item.totalArea,
     }).toList();
     return jsonEncode(jsonList);
@@ -34,19 +35,20 @@ class SavedDataStore {
       items.clear();
       for (var map in jsonList) {
         items.add(SavedMeasurementModel(
-          id: map['id'],
-          name: map['name'],
-          shape: map['shape'],
-          unit: map['unit'],
-          sideA: map['sideA'],
-          sideB: map['sideB'],
-          sideC: map['sideC'],
-          sideD: map['sideD'],
-          sideE: map['sideE'],
-          diagAC: map['diagAC'],
-          diagAD: map['diagAD'],
-          percentages: map['percentages'],
-          totalArea: map['totalArea'],
+          id: map['id'] ?? DateTime.now().toString(),
+          name: map['name'] ?? 'Plot Record',
+          dateTime: map['dateTime'] ?? '',
+          shape: map['shape'] ?? 'Quadrilateral',
+          unit: map['unit'] ?? 'Meters',
+          sideA: map['sideA'] ?? '',
+          sideB: map['sideB'] ?? '',
+          sideC: map['sideC'] ?? '',
+          sideD: map['sideD'] ?? '',
+          sideE: map['sideE'] ?? '',
+          diagAC: map['diagAC'] ?? '',
+          diagAD: map['diagAD'] ?? '',
+          direction: map['direction'] ?? 'Vertical',
+          totalArea: map['totalArea'] ?? 0.0,
         ));
       }
     } catch (e) {
@@ -58,15 +60,17 @@ class SavedDataStore {
 class SavedMeasurementModel {
   final String id;
   final String name;
+  final String dateTime;
   final String shape;
   final String unit;
   final String sideA, sideB, sideC, sideD, sideE, diagAC, diagAD;
-  final String percentages;
+  final String direction;
   final double totalArea;
 
   SavedMeasurementModel({
     required this.id,
     required this.name,
+    required this.dateTime,
     required this.shape,
     required this.unit,
     required this.sideA,
@@ -76,7 +80,7 @@ class SavedMeasurementModel {
     required this.sideE,
     required this.diagAC,
     required this.diagAD,
-    required this.percentages,
+    required this.direction,
     required this.totalArea,
   });
 }
@@ -115,9 +119,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
   final TextEditingController sideCController = TextEditingController(text: '55');
   final TextEditingController sideDController = TextEditingController(text: '60');
   final TextEditingController sideEController = TextEditingController();
-  final TextEditingController diagACController = TextEditingController();
+  final TextEditingController diagACController = TextEditingController(text: '45');
   final TextEditingController diagADController = TextEditingController();
-  final TextEditingController divisionPercentagesController = TextEditingController(text: '50,50');
 
   List<Offset> calculatedPoints = [];
   double totalAreaSqFt = 0.0;
@@ -128,18 +131,19 @@ class _DashboardScreenState extends State<DashboardScreen> {
       double a = double.tryParse(sideAController.text) ?? 0;
       double b = double.tryParse(sideBController.text) ?? 0;
       double c = double.tryParse(sideCController.text) ?? 0;
+      double d = double.tryParse(sideDController.text) ?? 0;
 
-      if (a <= 0 || b <= 0 || c <= 0) {
+      if (a <= 0 || b <= 0) {
         throw Exception("Please enter valid side dimensions.");
       }
 
       List<Offset> pts = [];
       if (selectedShape == 'Triangle') {
-        pts = [const Offset(50, 200), const Offset(200, 200), const Offset(120, 50)];
+        pts = [const Offset(60, 200), const Offset(240, 200), const Offset(150, 50)];
       } else if (selectedShape == 'Quadrilateral') {
-        pts = [const Offset(40, 200), const Offset(250, 180), const Offset(220, 50), const Offset(60, 60)];
+        pts = [const Offset(40, 200), const Offset(260, 180), const Offset(220, 50), const Offset(60, 70)];
       } else {
-        pts = [const Offset(40, 200), const Offset(250, 200), const Offset(270, 100), const Offset(150, 40), const Offset(30, 100)];
+        pts = [const Offset(40, 200), const Offset(260, 200), const Offset(280, 100), const Offset(150, 40), const Offset(20, 100)];
       }
 
       double area = (a * b);
@@ -154,7 +158,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
       });
 
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Plot calculated successfully!'), backgroundColor: Colors.teal),
+        const SnackBar(content: Text('Plot calculated & drafted successfully!'), backgroundColor: Colors.teal),
       );
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -171,7 +175,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
         title: const Text("Save Measurement"),
         content: TextField(
           controller: nameController,
-          decoration: const InputDecoration(hintText: "Enter Name (e.g. Plot # 12 - Ali)"),
+          decoration: const InputDecoration(hintText: "Enter Name (e.g. Plot # 12 - Ahmed)"),
         ),
         actions: [
           TextButton(onPressed: () => Navigator.pop(context), child: const Text("Cancel")),
@@ -179,9 +183,12 @@ class _DashboardScreenState extends State<DashboardScreen> {
             style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF00695C)),
             onPressed: () {
               if (nameController.text.trim().isEmpty) return;
+              String dateTimeNow = "${DateTime.now().day}-${DateTime.now().month}-${DateTime.now().year} ${DateTime.now().hour}:${DateTime.now().minute}";
+              
               SavedDataStore.items.add(SavedMeasurementModel(
                 id: DateTime.now().toString(),
                 name: nameController.text.trim(),
+                dateTime: dateTimeNow,
                 shape: selectedShape,
                 unit: selectedUnit,
                 sideA: sideAController.text,
@@ -191,12 +198,12 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 sideE: sideEController.text,
                 diagAC: diagACController.text,
                 diagAD: diagADController.text,
-                percentages: divisionPercentagesController.text,
+                direction: selectedDirection,
                 totalArea: totalAreaSqFt,
               ));
               Navigator.pop(context);
               ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text("Measurement saved successfully!"), backgroundColor: Colors.green),
+                const SnackBar(content: Text("Measurement saved successfully with Date/Time!"), backgroundColor: Colors.green),
               );
             },
             child: const Text("Save", style: TextStyle(color: Colors.white)),
@@ -217,7 +224,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
       sideEController.text = item.sideE;
       diagACController.text = item.diagAC;
       diagADController.text = item.diagAD;
-      divisionPercentagesController.text = item.percentages;
+      selectedDirection = item.direction;
     });
     calculatePlot();
   }
@@ -244,6 +251,15 @@ class _DashboardScreenState extends State<DashboardScreen> {
         ),
         actions: [
           IconButton(
+            icon: const Icon(Icons.chat, color: Colors.greenAccent),
+            tooltip: "WhatsApp: 03443157928",
+            onPressed: () {
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(content: Text("WhatsApp Contact: Sahil Janwery - 03443157928")),
+              );
+            },
+          ),
+          IconButton(
             icon: const Icon(Icons.bookmark_added, color: Colors.white),
             tooltip: "Saved Measurements",
             onPressed: () async {
@@ -263,6 +279,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
+            // TOP DROPDOWNS
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
               decoration: BoxDecoration(
@@ -311,6 +328,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
               ),
             ),
             const SizedBox(height: 12),
+
+            // INPUTS SECTION
             Container(
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
@@ -345,12 +364,13 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   Expanded(
                     child: Column(
                       children: [
-                        _buildSideInputField("Side AB", sideAController),
-                        _buildSideInputField("Side BC", sideBController),
-                        if (selectedShape != 'Triangle') _buildSideInputField("Side CD", sideCController),
-                        if (selectedShape != 'Triangle') _buildSideInputField("Side DA", sideDController),
-                        if (selectedShape == 'Pentagon') _buildSideInputField("Side EA", sideEController),
-                        _buildSideInputField("Diagonal AC", diagACController),
+                        _buildSideInputField("Side A", sideAController),
+                        _buildSideInputField("Side B", sideBController),
+                        if (selectedShape != 'Triangle') _buildSideInputField("Side C", sideCController),
+                        if (selectedShape != 'Triangle') _buildSideInputField("Side D", sideDController),
+                        if (selectedShape == 'Pentagon') _buildSideInputField("Side E", sideEController),
+                        _buildSideInputField("Side AC", diagACController),
+                        if (selectedShape == 'Pentagon') _buildSideInputField("Side AE", diagADController),
                       ],
                     ),
                   ),
@@ -358,42 +378,46 @@ class _DashboardScreenState extends State<DashboardScreen> {
               ),
             ),
             const SizedBox(height: 12),
+
+            // CALCULATE BUTTON & DIVISION DIRECTION (Reversed Order)
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                DropdownButton<String>(
-                  value: selectedDirection,
-                  underline: const SizedBox(),
-                  style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.black),
-                  items: ['Vertical', 'Horizontal', 'Parallel']
-                      .map((e) => DropdownMenuItem(value: e, child: Text(e)))
-                      .toList(),
-                  onChanged: (val) => setState(() => selectedDirection = val!),
+                ElevatedButton(
+                  onPressed: calculatePlot,
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFF00695C),
+                    padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 12),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
+                  ),
+                  const Text("Calculate", style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white)),
                 ),
-                ElevatedButton.icon(
-                  style: ElevatedButton.styleFrom(backgroundColor: Colors.indigo, padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8)),
-                  onPressed: promptSaveMeasurement,
-                  icon: const Icon(Icons.save, size: 16, color: Colors.white),
-                  label: const Text("Save Record", style: TextStyle(color: Colors.white, fontSize: 12)),
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(color: Colors.grey.shade300),
+                  ),
+                  child: Row(
+                    children: [
+                      const Text("Direction: ", style: TextStyle(fontSize: 12, color: Colors.grey)),
+                      DropdownButton<String>(
+                        value: selectedDirection,
+                        underline: const SizedBox(),
+                        style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.black),
+                        items: ['Vertical', 'Horizontal', 'Parallel']
+                            .map((e) => DropdownMenuItem(value: e, child: Text(e)))
+                            .toList(),
+                        onChanged: (val) => setState(() => selectedDirection = val!),
+                      ),
+                    ],
+                  ),
                 ),
               ],
             ),
-            const SizedBox(height: 12),
-            Center(
-              child: ElevatedButton(
-                onPressed: calculatePlot,
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFF00695C),
-                  padding: const EdgeInsets.symmetric(horizontal: 48, vertical: 14),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
-                ),
-                child: const Text(
-                  "Calculate",
-                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white),
-                ),
-              ),
-            ),
             const SizedBox(height: 16),
+
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
               decoration: BoxDecoration(
@@ -401,57 +425,78 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 borderRadius: BorderRadius.circular(4),
               ),
               child: const Text(
-                "Total Area",
+                "Total Area & AutoCAD Drafting",
                 style: TextStyle(fontWeight: FontWeight.bold, color: Colors.black87),
               ),
             ),
             const SizedBox(height: 12),
+
+            // AUTOCAD DRAFT PREVIEW (Without thick frame border, inner outline active)
             Container(
-              padding: const EdgeInsets.all(8),
+              padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(16),
-                gradient: const LinearGradient(
-                  colors: [Color(0xFFCE9FFC), Color(0xFF7367F0)],
-                ),
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: Colors.blue.shade200),
               ),
-              child: Container(
-                padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: Column(
-                  children: [
-                    Container(
-                      height: 240,
-                      width: double.infinity,
-                      decoration: BoxDecoration(
-                        border: Border.all(color: Colors.blue.shade200),
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      child: CustomPaint(
-                        painter: AutoCADDraftPainter(points: calculatedPoints),
-                      ),
+              child: Column(
+                children: [
+                  SizedBox(
+                    height: 240,
+                    width: double.infinity,
+                    child: CustomPaint(
+                      painter: AutoCADDraftPainter(points: calculatedPoints, shape: selectedShape),
                     ),
-                    const SizedBox(height: 12),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceAround,
-                      children: [
-                        TextButton(
-                          onPressed: () {},
-                          child: const Text("EXPORT PDF", style: TextStyle(color: Colors.indigo, fontWeight: FontWeight.bold)),
+                  ),
+                  const SizedBox(height: 12),
+                  // Export Buttons with nice rounded background styling
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceAround,
+                    children: [
+                      ElevatedButton.icon(
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.indigo.shade50,
+                          foregroundColor: Colors.indigo,
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
                         ),
-                        TextButton(
-                          onPressed: () {},
-                          child: const Text("EXPORT PNG", style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold)),
+                        onPressed: () {},
+                        icon: const Icon(Icons.picture_as_pdf, size: 18),
+                        label: const Text("EXPORT PDF", style: TextStyle(fontWeight: FontWeight.bold)),
+                      ),
+                      ElevatedButton.icon(
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.teal.shade50,
+                          foregroundColor: Colors.teal.shade900,
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
                         ),
-                      ],
-                    ),
-                  ],
+                        onPressed: () {},
+                        icon: const Icon(Icons.image, size: 18),
+                        label: const Text("EXPORT PNG", style: TextStyle(fontWeight: FontWeight.bold)),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 12),
+
+            // SAVE RECORD BUTTON (Placed right below drafting shape as requested)
+            SizedBox(
+              width: double.infinity,
+              child: ElevatedButton.icon(
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.indigo,
+                  padding: const EdgeInsets.symmetric(vertical: 12),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
                 ),
+                onPressed: promptSaveMeasurement,
+                icon: const Icon(Icons.save, color: Colors.white),
+                label: const Text("Save Measurement Record", style: TextStyle(color: Colors.white, fontSize: 15, fontWeight: FontWeight.bold)),
               ),
             ),
             const SizedBox(height: 16),
+
+            // DETAILS SECTION
             Container(
               padding: const EdgeInsets.all(14),
               decoration: BoxDecoration(
@@ -527,6 +572,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
   }
 }
 
+// ==========================================
+// SAVED MEASUREMENTS SCREEN (SEARCH & DATE/TIME)
+// ==========================================
 class SavedMeasurementsScreen extends StatefulWidget {
   const SavedMeasurementsScreen({super.key});
 
@@ -591,12 +639,13 @@ class _SavedMeasurementsScreenState extends State<SavedMeasurementsScreen> {
   Widget build(BuildContext context) {
     final filteredItems = SavedDataStore.items
         .where((item) => item.name.toLowerCase().contains(searchQuery.toLowerCase()) ||
-                         item.shape.toLowerCase().contains(searchQuery.toLowerCase()))
+                         item.shape.toLowerCase().contains(searchQuery.toLowerCase()) ||
+                         item.dateTime.toLowerCase().contains(searchQuery.toLowerCase()))
         .toList();
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text("Saved Measurements & Backup"),
+        title: const Text("Saved Records & Backup"),
         backgroundColor: const Color(0xFF00695C),
         actions: [
           IconButton(
@@ -618,7 +667,7 @@ class _SavedMeasurementsScreenState extends State<SavedMeasurementsScreen> {
             child: TextField(
               onChanged: (value) => setState(() => searchQuery = value),
               decoration: InputDecoration(
-                hintText: "Search saved plots...",
+                hintText: "Search by name, date or shape...",
                 prefixIcon: const Icon(Icons.search, color: Colors.teal),
                 filled: true,
                 fillColor: Colors.white,
@@ -641,7 +690,8 @@ class _SavedMeasurementsScreenState extends State<SavedMeasurementsScreen> {
                             child: Icon(Icons.architecture, color: Colors.teal),
                           ),
                           title: Text(item.name, style: const TextStyle(fontWeight: FontWeight.bold)),
-                          subtitle: Text("Shape: ${item.shape} | Area: ${item.totalArea.toStringAsFixed(0)} sq.ft"),
+                          subtitle: Text("Shape: ${item.shape} | Date: ${item.dateTime}\nArea: ${item.totalArea.toStringAsFixed(0)} sq.ft"),
+                          isThreeLine: true,
                           trailing: const Icon(Icons.arrow_forward_ios, size: 16, color: Colors.teal),
                           onTap: () {
                             Navigator.pop(context, item);
@@ -657,9 +707,14 @@ class _SavedMeasurementsScreenState extends State<SavedMeasurementsScreen> {
   }
 }
 
+// ==========================================
+// DRAFTING PAINTER WITH CORNERS A,B,C,D,E & DOTTED DIAGONALS
+// ==========================================
 class AutoCADDraftPainter extends CustomPainter {
   final List<Offset> points;
-  AutoCADDraftPainter({required this.points});
+  final String shape;
+
+  AutoCADDraftPainter({required this.points, required this.shape});
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -687,9 +742,41 @@ class AutoCADDraftPainter extends CustomPainter {
     canvas.drawPath(path, fillPaint);
     canvas.drawPath(path, outlinePaint);
 
-    final dotPaint = Paint()..color = Colors.blue.shade900;
-    for (int i = 0; i < points.length; i++) {
+    // Draw Dotted Diagonal Lines for Clarity
+    final dottedPaint = Paint()
+      ..color = Colors.red.shade700
+      ..strokeWidth = 1.5
+      ..style = PaintingStyle.stroke;
+
+    if (points.length >= 3) {
+      _drawDottedLine(canvas, points[0], points[2], dottedPaint);
+    }
+
+    // Corner labels (A, B, C, D, E)
+    List<String> labels = ['A', 'B', 'C', 'D', 'E'];
+    TextStyle textStyle = const TextStyle(color: Colors.black87, fontSize: 13, fontWeight: FontWeight.bold);
+
+    for (int i = 0; i < points.length && i < labels.length; i++) {
+      final dotPaint = Paint()..color = Colors.blue.shade900;
       canvas.drawCircle(points[i], 4, dotPaint);
+
+      TextSpan span = TextSpan(text: labels[i], style: textStyle);
+      TextPainter tp = TextPainter(text: span, textDirection: TextDirection.ltr);
+      tp.layout();
+      tp.paint(canvas, points[i] + const Offset(-5, -15));
+    }
+  }
+
+  void _drawDottedLine(Canvas canvas, Offset p1, Offset p2, Paint paint) {
+    double dashWidth = 5, dashSpace = 3, distance = 0;
+    final vector = p2 - p1;
+    final length = vector.distance;
+    final unitVector = vector / length;
+    while (distance < length) {
+      var start = p1 + unitVector * distance;
+      var end = p1 + unitVector * min(distance + dashWidth, length);
+      canvas.drawLine(start, end, paint);
+      distance += dashWidth + dashSpace;
     }
   }
 
