@@ -10,23 +10,26 @@ class SavedDataStore {
   static List<SavedMeasurementModel> items = [];
 
   static String exportToJson() {
-    List> jsonList = items.map((item) => {
-      'id': item.id,
-      'name': item.name,
-      'dateTime': item.dateTime,
-      'shape': item.shape,
-      'unit': item.unit,
-      'sideA': item.sideA,
-      'sideB': item.sideB,
-      'sideC': item.sideC,
-      'sideD': item.sideD,
-      'sideE': item.sideE,
-      'diagAC': item.diagAC,
-      'diagAD': item.diagAD,
-      'direction': item.direction,
-      'totalArea': item.totalArea,
-    }).toList();
-    return jsonEncode(jsonList);
+    List> rawList = [];
+    for (var item in items) {
+      rawList.add({
+        'id': item.id,
+        'name': item.name,
+        'dateTime': item.dateTime,
+        'shape': item.shape,
+        'unit': item.unit,
+        'sideA': item.sideA,
+        'sideB': item.sideB,
+        'sideC': item.sideC,
+        'sideD': item.sideD,
+        'sideE': item.sideE,
+        'diagAC': item.diagAC,
+        'diagAD': item.diagAD,
+        'direction': item.direction,
+        'totalArea': item.totalArea,
+      });
+    }
+    return jsonEncode(rawList);
   }
 
   static void importFromJson(String jsonString) {
@@ -130,8 +133,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
     try {
       double a = double.tryParse(sideAController.text) ?? 0;
       double b = double.tryParse(sideBController.text) ?? 0;
-      double c = double.tryParse(sideCController.text) ?? 0;
-      double d = double.tryParse(sideDController.text) ?? 0;
 
       if (a <= 0 || b <= 0) {
         throw Exception("Please enter valid side dimensions.");
