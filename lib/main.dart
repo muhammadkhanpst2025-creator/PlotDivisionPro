@@ -279,7 +279,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            // TOP DROPDOWNS
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
               decoration: BoxDecoration(
@@ -328,8 +327,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
               ),
             ),
             const SizedBox(height: 12),
-
-            // INPUTS SECTION
             Container(
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
@@ -378,8 +375,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
               ),
             ),
             const SizedBox(height: 12),
-
-            // CALCULATE BUTTON & DIVISION DIRECTION (Reversed Order)
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
@@ -390,7 +385,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 12),
                     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
                   ),
-                  const Text("Calculate", style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white)),
+                  child: const Text("Calculate", style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white)),
                 ),
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
@@ -417,7 +412,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
               ],
             ),
             const SizedBox(height: 16),
-
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
               decoration: BoxDecoration(
@@ -430,8 +424,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
               ),
             ),
             const SizedBox(height: 12),
-
-            // AUTOCAD DRAFT PREVIEW (Without thick frame border, inner outline active)
             Container(
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
@@ -449,7 +441,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     ),
                   ),
                   const SizedBox(height: 12),
-                  // Export Buttons with nice rounded background styling
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceAround,
                     children: [
@@ -479,8 +470,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
               ),
             ),
             const SizedBox(height: 12),
-
-            // SAVE RECORD BUTTON (Placed right below drafting shape as requested)
             SizedBox(
               width: double.infinity,
               child: ElevatedButton.icon(
@@ -495,8 +484,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
               ),
             ),
             const SizedBox(height: 16),
-
-            // DETAILS SECTION
             Container(
               padding: const EdgeInsets.all(14),
               decoration: BoxDecoration(
@@ -572,9 +559,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
   }
 }
 
-// ==========================================
-// SAVED MEASUREMENTS SCREEN (SEARCH & DATE/TIME)
-// ==========================================
 class SavedMeasurementsScreen extends StatefulWidget {
   const SavedMeasurementsScreen({super.key});
 
@@ -707,9 +691,6 @@ class _SavedMeasurementsScreenState extends State<SavedMeasurementsScreen> {
   }
 }
 
-// ==========================================
-// DRAFTING PAINTER WITH CORNERS A,B,C,D,E & DOTTED DIAGONALS
-// ==========================================
 class AutoCADDraftPainter extends CustomPainter {
   final List<Offset> points;
   final String shape;
@@ -742,7 +723,6 @@ class AutoCADDraftPainter extends CustomPainter {
     canvas.drawPath(path, fillPaint);
     canvas.drawPath(path, outlinePaint);
 
-    // Draw Dotted Diagonal Lines for Clarity
     final dottedPaint = Paint()
       ..color = Colors.red.shade700
       ..strokeWidth = 1.5
@@ -752,7 +732,6 @@ class AutoCADDraftPainter extends CustomPainter {
       _drawDottedLine(canvas, points[0], points[2], dottedPaint);
     }
 
-    // Corner labels (A, B, C, D, E)
     List<String> labels = ['A', 'B', 'C', 'D', 'E'];
     TextStyle textStyle = const TextStyle(color: Colors.black87, fontSize: 13, fontWeight: FontWeight.bold);
 
